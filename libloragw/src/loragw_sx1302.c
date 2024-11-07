@@ -77,6 +77,7 @@ License: Revised BSD License, see LICENSE.TXT file include in the project
 #define RSSI_FSK_POLY_2         0.007129
 #define RSSI_FSK_POLY_3         -0.000026
 
+#define FREQ_OFFSET_LSB_62K5HZ  0.05960464f     /* 62500 * 32 / 2^6 / 2^19 */
 #define FREQ_OFFSET_LSB_125KHZ  0.11920929f     /* 125000 * 32 / 2^6 / 2^19 */
 #define FREQ_OFFSET_LSB_250KHZ  0.238418579f    /* 250000 * 32 / 2^6 / 2^19 */
 #define FREQ_OFFSET_LSB_500KHZ  0.476837158f    /* 500000 * 32 / 2^6 / 2^19 */
@@ -2053,6 +2054,9 @@ int sx1302_parse(lgw_context_t * context, struct lgw_pkt_rx_s * p) {
 
         /* Get frequency offset in Hz depending on bandwidth */
         switch (p->bandwidth) {
+            case BW_62K5HZ:
+                p->freq_offset = (int32_t)((float)(pkt.frequency_offset_error) * FREQ_OFFSET_LSB_62K5HZ);
+                break;
             case BW_125KHZ:
                 p->freq_offset = (int32_t)((float)(pkt.frequency_offset_error) * FREQ_OFFSET_LSB_125KHZ);
                 break;
@@ -2222,6 +2226,7 @@ int sx1302_tx_set_start_delay(uint8_t rf_chain, lgw_radio_type_t radio_type, uin
     /* Adjust with radio type and bandwidth */
     switch (radio_type) {
         case LGW_RADIO_TYPE_SX1250:
+            /* TODO: are adjustments needed for 62500 bandwidth? */
             if (bandwidth == BW_125KHZ) {
                 radio_bw_delay = 19;
             } else if (bandwidth == BW_250KHZ) {

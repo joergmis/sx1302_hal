@@ -594,6 +594,7 @@ static int parse_SX130x_configuration(const char * conf_file) {
                                 case 500000: sx1261conf.lbt_conf.channels[i].bandwidth = BW_500KHZ; break;
                                 case 250000: sx1261conf.lbt_conf.channels[i].bandwidth = BW_250KHZ; break;
                                 case 125000: sx1261conf.lbt_conf.channels[i].bandwidth = BW_125KHZ; break;
+                                case 62500: sx1261conf.lbt_conf.channels[i].bandwidth = BW_62K5HZ; break;
                                 default: sx1261conf.lbt_conf.channels[i].bandwidth = BW_UNDEFINED;
                             }
                         } else {
@@ -909,6 +910,7 @@ static int parse_SX130x_configuration(const char * conf_file) {
                 case 500000: ifconf.bandwidth = BW_500KHZ; break;
                 case 250000: ifconf.bandwidth = BW_250KHZ; break;
                 case 125000: ifconf.bandwidth = BW_125KHZ; break;
+                case 62500: ifconf.bandwidth = BW_62K5HZ; break;
                 default: ifconf.bandwidth = BW_UNDEFINED;
             }
             sf = (uint32_t)json_object_dotget_number(conf_obj, "chan_Lora_std.spread_factor");
@@ -991,8 +993,8 @@ static int parse_SX130x_configuration(const char * conf_file) {
             else if (bw <= 7800)   ifconf.bandwidth = BW_7K8HZ;
             else if (bw <= 15600)  ifconf.bandwidth = BW_15K6HZ;
             else if (bw <= 31200)  ifconf.bandwidth = BW_31K2HZ;
-            else if (bw <= 62500)  ifconf.bandwidth = BW_62K5HZ;
 #endif
+            else if (bw <= 62500)  ifconf.bandwidth = BW_62K5HZ;
             else if (bw <= 125000) ifconf.bandwidth = BW_125KHZ;
             else if (bw <= 250000) ifconf.bandwidth = BW_250KHZ;
             else if (bw <= 500000) ifconf.bandwidth = BW_500KHZ;
@@ -2253,6 +2255,11 @@ void thread_up(void) {
                         exit(EXIT_FAILURE);
                 }
                 switch (p->bandwidth) {
+                    case BW_62K5HZ:
+                        /* TODO: is this the right string? Or should it rather be BW062 or event BW063? */
+                        memcpy((void *)(buff_up + buff_index), (void *)"BW625\"", 6);
+                        buff_index += 6;
+                        break;
                     case BW_125KHZ:
                         memcpy((void *)(buff_up + buff_index), (void *)"BW125\"", 6);
                         buff_index += 6;
@@ -2614,6 +2621,9 @@ void thread_down(void) {
     beacon_pkt.rf_power = beacon_power;
     beacon_pkt.modulation = MOD_LORA;
     switch (beacon_bw_hz) {
+        case 62500:
+            beacon_pkt.bandwidth = BW_62K5HZ;
+            break;
         case 125000:
             beacon_pkt.bandwidth = BW_125KHZ;
             break;
@@ -3044,6 +3054,8 @@ void thread_down(void) {
                         continue;
                 }
                 switch (x1) {
+                    // /* TODO: is the case properly handled? */
+                    // case 62: txpkt.bandwidth = BW_62K5HZ; break;
                     case 125: txpkt.bandwidth = BW_125KHZ; break;
                     case 250: txpkt.bandwidth = BW_250KHZ; break;
                     case 500: txpkt.bandwidth = BW_500KHZ; break;

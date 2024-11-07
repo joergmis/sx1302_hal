@@ -230,6 +230,7 @@ int32_t lgw_bw_getval(int x) {
         case BW_500KHZ: return 500000;
         case BW_250KHZ: return 250000;
         case BW_125KHZ: return 125000;
+        case BW_62K5HZ: return 62500;
         default: return -1;
     }
 }
